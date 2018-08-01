@@ -1,36 +1,31 @@
-from time import sleep
-
-from flask import Blueprint, app
-from flask import current_app
-from flask import redirect
-from flask import render_template
-from flask import url_for
-from flask_mail import Message
-
-from App.extentions import db, mail
-from App.views.forms import PostForm
-
-mainbp = Blueprint("main", __name__)
+from flask import Blueprint,render_template,redirect,url_for,flash,request
+from app.extentions import db
+from app.forms import PostForm
+from app.models import User,Post
+from flask_login import login_required,current_user
 
 
+mainbp = Blueprint('mainbp', __name__)
 
-@mainbp.route('/',methods=["GET","POST"])
-def hello_world():
-    renderForm = PostForm()
-    if renderForm.validate_on_submit():
-        return redirect(url_for("postbp.postBlog"))
-    return render_template("app/main/index.html",form=renderForm)
+@mainbp.route('/',methods=['GET','POST'])
+def index():
+    form = PostForm()
 
+    if form.validate_on_submit():
+        content = form.content.data
+        user = current_user._get_current_object()
+        post = Post(content=content,user=user)
+        db.session.add(post)
+        flash('发表成功！')
 
+    # 展示所有内容
+    page = int(request.args.get('page',1))
+    pagination = Post.query.order_by(Post.posttime.desc()).paginate(page=page, per_page=5, error_out=False)
+    posts = pagination.items
 
-@mainbp.route("/sendmail")
-def sendMail():
-    for i in range(10):
-        msg = Message(
-            subject="您好，上期开19你中了吗?+我薇:w573398728就有开奖晚上的一畄",
-            recipients=["573398728@qq.com"],
-            sender=current_app.config["MAIL_USERNAME"],
-        )
-        mail.send(msg)
-        sleep(5)
-    return "success to send a mail"
+    return render_template('main/index.html',form=form,posts=posts,pagination=pagination,page=page)
+
+@mainbp.route('/getmoney/')
+@login_required
+def getmoney():
+    return '您可以免费在这里学习Python并到前台领取劳斯莱斯一辆'

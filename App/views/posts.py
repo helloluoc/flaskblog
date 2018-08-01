@@ -1,13 +1,32 @@
-from flask import Blueprint,flash
-from flask import redirect
-from flask import url_for
-from flask_login import login_required
+from flask import Blueprint,flash,redirect,url_for, jsonify
+from flask_login import login_required,current_user
+from wtforms.ext import sqlalchemy
 
+from app.models import Post
 
-postbp = Blueprint("postbp", __name__)
+postbp = Blueprint('postbp', __name__)
 
-@postbp.route("/post")
+@postbp.route('/showall/')
+def showall():
+    return 'showall'\
+
+@postbp.route('/post/')
 @login_required
-def postBlog():
-    flash("发布成功")
-    return redirect(url_for("main.hello_world"))
+def post():
+    flash('发布成功！')
+    return redirect(url_for('mainbp.index'))
+
+@postbp.route('/switch_collect/<int:pid>/')
+@login_required
+def switch_collect(pid):
+    post = Post.query.get(pid)
+
+    if current_user.is_collected(pid):
+        current_user.collections.remove(post)
+        return jsonify({'result':False})
+    else:
+        current_user.collections.append(post)
+        return jsonify({'result': True})
+
+
+

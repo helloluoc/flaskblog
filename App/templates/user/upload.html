@@ -1,0 +1,6 @@
+{% extends 'common/base.html' %}
+
+{% block center_content %}
+    <img class="user-icon" src="{{ imgurl }}">
+    {{ wtf.quick_form(form) }}
+{% endblock %}

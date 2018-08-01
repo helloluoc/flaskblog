@@ -1,18 +1,15 @@
-from flask import Flask
-from flask_script import Manager
+from flask.ext.migrate import MigrateCommand
+from flask.ext.script import Manager
+from app import create_app
+from app.extentions import db
 
-from App.config import create_app
-from App.extentions import db
+app = create_app()
+manager = Manager(app)
+manager.add_command('db', MigrateCommand)
 
-app = Flask(__name__)
-create_app(app)
-manage = Manager(app)
-
-@manage.command
-def createDb():
+@manager.command
+def createdb():
     db.create_all()
 
-#manage.add_command("db",MigrateCommand)
-
 if __name__ == '__main__':
-    manage.run()
+    manager.run()

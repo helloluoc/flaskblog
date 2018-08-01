@@ -1,0 +1,107 @@
+{% extends 'common/base.html' %}
+{% from 'common/macros.html' import show_pagination %}
+
+{% block styles %}
+    {{ super() }}
+    <style type="text/css">
+        .post-list {
+            margin-top: 20px;
+        }
+
+        .post-list li {
+            height: 100px;
+        }
+
+        .post-list li .middle-box {
+            margin-left: 15px;
+        }
+
+        .post-list li .right-box {
+            height: 90px;
+            line-height: 70px;
+            width: 100px;
+            text-align: center;
+        }
+
+        .user-icon {
+            width: 80px;
+            height: 80px;
+        }
+
+        .user-name {
+            margin-top: 2px;
+        }
+
+        span.collect{
+            cursor: pointer;
+            color: #ee8aff;
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script type="text/javascript">
+        $(function () {
+            $('span.collect').each(function (i, element) {
+                $(element).click(function () {
+                    $.ajax({
+                        /*这里用一个本地地址模拟远程地址*/
+                        url: $(element).attr('url'),
+
+                        /*请求类型，可以是get或post*/
+                        type: 'get',
+
+                        /*请求的数据类型，通常就是json*/
+                        dataType: 'json'
+                    })
+
+                    /*数据获取成功回调，data就是服务端返回的json数据*/
+                        .done(function (data) {
+                            if(data.result==true){
+                                $(element).text('取消收藏');
+                            }else{
+                                $(element).text('收藏');
+                            }
+                        })
+
+                        /*加载失败回调*/
+                        .fail(function () {
+                            alert('通信失败');
+                        });
+                })
+            })
+        })
+    </script>
+{% endblock %}
+
+{% block center_content %}
+    {{ wtf.quick_form(form) }}
+
+    <ul class="list-group post-list">
+        {% for post in posts %}
+            <li class="list-group-item">
+                <img class="fl user-icon" src="{{ url_for('static',filename='uploads/'+post.user.icon) }}">
+                <div class="fl middle-box">
+                    <h4 class="user-name">{{ post.user.username }}</h4>
+                    <p>{{ post.content }}</p>
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_collected(post.id) %}
+                            <span class="collect" url="{{ url_for('postbp.switch_collect',pid=post.id) }}">取消收藏</span>
+                        {% else %}
+                            <span class="collect" url="{{ url_for('postbp.switch_collect',pid=post.id) }}">收藏</span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                <div class="fr right-box">
+                    {{ moment(post.posttime).fromNow() }}
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+
+    {{ show_pagination(pagination,page,'mainbp.index') }}
+
+{% endblock %}
+
+
